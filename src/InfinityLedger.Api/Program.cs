@@ -1,6 +1,8 @@
+using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using InfinityLedger.Api.Auth;
 using InfinityLedger.Api.Data;
+using InfinityLedger.Api.PlanCuentas;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,10 +19,26 @@ builder.Services.AddDbContext<CodeLedgerContext>(options =>
 
 // Autenticación con JWT
 var jwt = builder.Configuration.GetSection(JwtOpciones.Seccion).Get<JwtOpciones>() ?? new JwtOpciones();
+var claveJwtTemporal = false;
+if (string.IsNullOrWhiteSpace(jwt.Clave) && builder.Environment.IsDevelopment())
+{
+    // Sin clave configurada en desarrollo: se usa una aleatoria para no bloquear el arranque.
+    // Los tokens dejan de servir al reiniciar la API (el frontend vuelve a pedir login).
+    jwt.Clave = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+    claveJwtTemporal = true;
+}
+
+// Se valida aquí para que una clave ausente o corta impida arrancar, en vez de fallar en cada petición.
+var claveFirma = GeneradorToken.CrearClave(jwt.Clave);
+
 builder.Services.Configure<JwtOpciones>(builder.Configuration.GetSection(JwtOpciones.Seccion));
+builder.Services.PostConfigure<JwtOpciones>(opciones => opciones.Clave = jwt.Clave);
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IGeneradorToken, GeneradorToken>();
 builder.Services.AddScoped<IServicioAutenticacion, ServicioAutenticacion>();
+
+// Módulos
+builder.Services.AddScoped<IServicioPlanCuentas, ServicioPlanCuentas>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -34,7 +52,7 @@ builder.Services
             ValidateAudience = true,
             ValidAudience = jwt.Audiencia,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = GeneradorToken.CrearClave(jwt.Clave),
+            IssuerSigningKey = claveFirma,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1),
             NameClaimType = GeneradorToken.ClaimNombre,
@@ -79,6 +97,13 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+if (claveJwtTemporal)
+{
+    app.Logger.LogWarning(
+        "No se encontró Jwt:Clave; se usa una clave temporal y los tokens se invalidarán al reiniciar. " +
+        "Para fijarla: dotnet user-secrets set \"Jwt:Clave\" \"<clave base64>\" --project src/InfinityLedger.Api");
+}
 
 if (app.Environment.IsDevelopment())
 {

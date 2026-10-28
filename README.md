@@ -18,7 +18,9 @@ La API firma los JWT con `Jwt:Clave`, que no está en el repositorio. En desarro
 dotnet user-secrets set "Jwt:Clave" "<clave en base64>" --project src/InfinityLedger.Api
 ```
 
-En producción va en la variable de entorno `Jwt__Clave`.
+En producción va en la variable de entorno `Jwt__Clave`; si falta, la API no arranca. En desarrollo,
+si no la encuentra, usa una clave temporal y lo avisa en la consola ("No se encontró Jwt:Clave..."):
+funciona, pero hay que volver a iniciar sesión cada vez que se reinicia la API.
 
 ## Ejecutar
 
