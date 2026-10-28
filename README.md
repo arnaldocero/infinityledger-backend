@@ -9,24 +9,57 @@ Pomelo sobre MariaDB 10.4 (XAMPP).
 - MariaDB de XAMPP corriendo en el puerto 3306 con la base `codeledger` (ver `database/README.md`).
   Si el servicio de Windows **MySQL80** está activo, ocupa el puerto 3306 y la API no puede conectarse.
 
+## Primera vez: clave de los tokens
+
+La API firma los JWT con `Jwt:Clave`, que no está en el repositorio. En desarrollo se guarda en
+*user-secrets*; sin ella la API no arranca. Genera una clave aleatoria de 64 bytes en base64 y guárdala:
+
+```bash
+dotnet user-secrets set "Jwt:Clave" "<clave en base64>" --project src/InfinityLedger.Api
+```
+
+En producción va en la variable de entorno `Jwt__Clave`.
+
 ## Ejecutar
 
 ```bash
-dotnet run --project src/InfinityLedger.Api --launch-profile https
+dotnet run --project src/InfinityLedger.Api --launch-profile http
 ```
 
-- API: https://localhost:5001 (http://localhost:5000 con `--launch-profile http`)
-- Swagger: https://localhost:5001/swagger
+- API: http://localhost:5000 (el frontend en desarrollo apunta aquí)
+- Swagger: http://localhost:5000/swagger (botón **Authorize** para probar con el token del login)
 - Prueba de conexión: `GET /api/salud`
 
-La primera vez con https puede ser necesario confiar en el certificado de desarrollo: `dotnet dev-certs https --trust`.
+Con `--launch-profile https` la API queda en https://localhost:5001, pero antes hay que confiar en el
+certificado de desarrollo (`dotnet dev-certs https --trust`). Fuera de desarrollo la API redirige a https.
+
+## Autenticación
+
+| Endpoint | Descripción |
+|---|---|
+| `POST /api/auth/login` | `{ email, password }` → `{ token, expiraEn, usuario }`. 401 con el mismo mensaje si el correo no existe, la contraseña no coincide o el usuario/empresa están inactivos. Máximo 10 intentos por minuto por IP (429). |
+| `GET /api/auth/yo` | Datos del usuario del token. Requiere `Authorization: Bearer <token>`. |
+
+- Contraseñas con bcrypt (`usuarios.password_hash`).
+- El token dura `Jwt:ExpiracionMinutos` (480 por defecto) e incluye `sub`, `name`, `email`, `role` e `id_empresa`.
+- Cada intento sobre un usuario existente queda en `auditoria_logs` (`LOGIN` o `LOGIN_FALLIDO`, con la IP).
 
 ## Configuración
 
-`src/InfinityLedger.Api/appsettings.Development.json`:
+`src/InfinityLedger.Api/appsettings.json` y `appsettings.Development.json`:
 
 - `ConnectionStrings:CodeLedger`: conexión a MariaDB (root sin contraseña, valor por defecto de XAMPP).
 - `Cors:Origenes`: orígenes permitidos; por defecto el frontend Angular en http://localhost:4200.
+- `Jwt`: emisor, audiencia y duración del token. La clave va en user-secrets (ver arriba).
+
+## Pruebas
+
+```bash
+dotnet test
+```
+
+Pruebas unitarias del servicio de login y pruebas de integración de los endpoints con
+`WebApplicationFactory` y una base en memoria (no necesitan MariaDB).
 
 ## Entidades
 
