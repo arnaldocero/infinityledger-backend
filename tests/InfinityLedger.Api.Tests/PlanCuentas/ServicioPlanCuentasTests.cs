@@ -17,7 +17,8 @@ public class ServicioPlanCuentasTests
 
         var cuentas = await new ServicioPlanCuentas(db).ListarAsync(1, CancellationToken.None);
 
-        Assert.Equal(new[] { "1", "11", "1105", "110505", "2" }, cuentas.Select(c => c.Codigo));
+        Assert.Equal(new[] { "1", "11", "1105", "110505", "110595", "2", "4", "41", "4135", "413505", "5", "51", "5135", "513505" },
+            cuentas.Select(c => c.Codigo));
     }
 
     [Fact]

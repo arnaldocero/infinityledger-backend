@@ -17,5 +17,12 @@ public partial class CodeLedgerContext
                 .HasColumnType("set('CLIENTE','PROVEEDOR','EMPLEADO','OTRO')")
                 .HasColumnName("tipo_tercero");
         });
+
+        // El UPDATE del consecutivo incluye su valor anterior en el WHERE: si otro usuario
+        // tomó el mismo número en paralelo, SaveChanges falla y el asiento se renumera.
+        modelBuilder.Entity<TipoComprobante>(entity =>
+        {
+            entity.Property(e => e.ConsecutivoActual).IsConcurrencyToken();
+        });
     }
 }

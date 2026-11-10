@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Threading.RateLimiting;
+using InfinityLedger.Api.Asientos;
 using InfinityLedger.Api.Auth;
 using InfinityLedger.Api.Data;
 using InfinityLedger.Api.CentrosCosto;
@@ -47,6 +48,7 @@ builder.Services.AddScoped<IServicioTerceros, ServicioTerceros>();
 builder.Services.AddScoped<IServicioCentrosCosto, ServicioCentrosCosto>();
 builder.Services.AddScoped<IServicioPeriodos, ServicioPeriodos>();
 builder.Services.AddScoped<IServicioTiposComprobante, ServicioTiposComprobante>();
+builder.Services.AddScoped<IServicioAsientos, ServicioAsientos>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

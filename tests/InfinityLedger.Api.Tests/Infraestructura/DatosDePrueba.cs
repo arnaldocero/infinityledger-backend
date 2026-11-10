@@ -28,6 +28,9 @@ public static class DatosDePrueba
     public const int CajaGeneral = 4;
     public const int Pasivo = 5;
     public const int ActivoEmpresa2 = 100;
+    public const int CajaInactiva = 6;        // 110595, auxiliar e inactiva
+    public const int Ventas = 10;             // 413505, exige tercero
+    public const int Servicios = 14;          // 513505, exige centro de costo
 
     // Terceros y centros de costo sembrados
     public const int ClienteDemo = 1;
@@ -64,7 +67,16 @@ public static class DatosDePrueba
             Cuenta(Disponible, 1, "11", "DISPONIBLE", Activo, 2, "ACTIVO", "DEBITO", movimiento: false),
             Cuenta(Caja, 1, "1105", "CAJA", Disponible, 3, "ACTIVO", "DEBITO", movimiento: false),
             Cuenta(CajaGeneral, 1, "110505", "Caja General", Caja, 4, "ACTIVO", "DEBITO", movimiento: true),
+            Cuenta(CajaInactiva, 1, "110595", "Caja inactiva", Caja, 4, "ACTIVO", "DEBITO", movimiento: true, activo: false),
             Cuenta(Pasivo, 1, "2", "PASIVO", null, 1, "PASIVO", "CREDITO", movimiento: false),
+            Cuenta(7, 1, "4", "INGRESOS", null, 1, "INGRESO", "CREDITO", movimiento: false),
+            Cuenta(8, 1, "41", "OPERACIONALES", 7, 2, "INGRESO", "CREDITO", movimiento: false),
+            Cuenta(9, 1, "4135", "COMERCIO", 8, 3, "INGRESO", "CREDITO", movimiento: false),
+            Cuenta(Ventas, 1, "413505", "Ventas", 9, 4, "INGRESO", "CREDITO", movimiento: true, pideTercero: true),
+            Cuenta(11, 1, "5", "GASTOS", null, 1, "GASTO", "DEBITO", movimiento: false),
+            Cuenta(12, 1, "51", "ADMINISTRATIVOS", 11, 2, "GASTO", "DEBITO", movimiento: false),
+            Cuenta(13, 1, "5135", "SERVICIOS", 12, 3, "GASTO", "DEBITO", movimiento: false),
+            Cuenta(Servicios, 1, "513505", "Servicios públicos", 13, 4, "GASTO", "DEBITO", movimiento: true, pideCentro: true),
             Cuenta(ActivoEmpresa2, 2, "1", "ACTIVO EMPRESA DOS", null, 1, "ACTIVO", "DEBITO", movimiento: false));
 
         db.Terceros.AddRange(
@@ -141,7 +153,8 @@ public static class DatosDePrueba
 
     private static PlanCuenta Cuenta(
         int id, int idEmpresa, string codigo, string nombre, int? idPadre, int nivel,
-        string tipo, string naturaleza, bool movimiento) => new()
+        string tipo, string naturaleza, bool movimiento,
+        bool activo = true, bool pideTercero = false, bool pideCentro = false) => new()
     {
         IdCuenta = id,
         IdEmpresa = idEmpresa,
@@ -152,8 +165,8 @@ public static class DatosDePrueba
         TipoCuenta = tipo,
         Naturaleza = naturaleza,
         EsMovimiento = movimiento,
-        PideTercero = false,
-        PideCentroCosto = false,
-        Activo = true,
+        PideTercero = pideTercero,
+        PideCentroCosto = pideCentro,
+        Activo = activo,
     };
 }
