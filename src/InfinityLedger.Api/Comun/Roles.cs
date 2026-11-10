@@ -9,4 +9,7 @@ public static class Roles
     public const string Auditor = "AUDITOR";
 
     public const string AdminOContador = Admin + "," + Contador;
+
+    /// <summary>Todos menos el AUDITOR, que solo consulta.</summary>
+    public const string AdminContadorAuxiliar = Admin + "," + Contador + "," + Auxiliar;
 }

@@ -44,7 +44,7 @@ public class PlanCuentasController : ControllerBase
         var resultado = await _servicio.CrearAsync(Usuario, request, cancellationToken);
         return resultado.EsExito
             ? CreatedAtAction(nameof(Obtener), new { idCuenta = resultado.Valor!.IdCuenta }, resultado.Valor)
-            : Error(resultado);
+            : this.Error(resultado);
     }
 
     [HttpPut("{idCuenta:int}")]
@@ -55,19 +55,8 @@ public class PlanCuentasController : ControllerBase
     public async Task<IActionResult> Editar(int idCuenta, EditarCuentaRequest request, CancellationToken cancellationToken)
     {
         var resultado = await _servicio.EditarAsync(Usuario, idCuenta, request, cancellationToken);
-        return resultado.EsExito ? Ok(resultado.Valor) : Error(resultado);
+        return resultado.EsExito ? Ok(resultado.Valor) : this.Error(resultado);
     }
 
     private UsuarioActual Usuario => UsuarioActual.Desde(User, HttpContext);
-
-    private IActionResult Error<T>(Resultado<T> resultado)
-    {
-        var cuerpo = new { message = resultado.Mensaje };
-        return resultado.Error switch
-        {
-            TipoError.NoEncontrado => NotFound(cuerpo),
-            TipoError.Conflicto => Conflict(cuerpo),
-            _ => BadRequest(cuerpo),
-        };
-    }
 }

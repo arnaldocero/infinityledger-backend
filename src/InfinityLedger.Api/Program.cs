@@ -2,7 +2,9 @@ using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using InfinityLedger.Api.Auth;
 using InfinityLedger.Api.Data;
+using InfinityLedger.Api.CentrosCosto;
 using InfinityLedger.Api.PlanCuentas;
+using InfinityLedger.Api.Terceros;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -39,6 +41,8 @@ builder.Services.AddScoped<IServicioAutenticacion, ServicioAutenticacion>();
 
 // Módulos
 builder.Services.AddScoped<IServicioPlanCuentas, ServicioPlanCuentas>();
+builder.Services.AddScoped<IServicioTerceros, ServicioTerceros>();
+builder.Services.AddScoped<IServicioCentrosCosto, ServicioCentrosCosto>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

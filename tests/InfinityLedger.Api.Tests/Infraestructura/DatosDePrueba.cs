@@ -5,8 +5,9 @@ namespace InfinityLedger.Api.Tests.Infraestructura;
 
 /// <summary>
 /// Dos empresas para comprobar que nadie ve datos de otra empresa.
-///   Empresa 1: admin, auxiliar y un PUC pequeño (1 → 11 → 1105 → 110505, y 2 PASIVO).
-///   Empresa 2: admin y la cuenta 1.
+///   Empresa 1: admin, auxiliar, auditor, un PUC pequeño (1 → 11 → 1105 → 110505, y 2 PASIVO),
+///              dos terceros y un centro de costo.
+///   Empresa 2: admin, la cuenta 1 y un tercero.
 /// </summary>
 public static class DatosDePrueba
 {
@@ -14,6 +15,7 @@ public static class DatosDePrueba
 
     public const string AdminEmpresa1 = "admin@empresa1.com";
     public const string AuxiliarEmpresa1 = "auxiliar@empresa1.com";
+    public const string AuditorEmpresa1 = "auditor@empresa1.com";
     public const string AdminEmpresa2 = "admin@empresa2.com";
 
     // Ids de cuentas sembradas
@@ -23,6 +25,12 @@ public static class DatosDePrueba
     public const int CajaGeneral = 4;
     public const int Pasivo = 5;
     public const int ActivoEmpresa2 = 100;
+
+    // Terceros y centros de costo sembrados
+    public const int ClienteDemo = 1;
+    public const int ProveedorDemo = 2;
+    public const int TerceroEmpresa2 = 100;
+    public const int CentroAdministracion = 1;
 
     public static void Cargar(CodeLedgerContext db)
     {
@@ -35,6 +43,7 @@ public static class DatosDePrueba
         db.Usuarios.AddRange(
             Usuario(1, 1, AdminEmpresa1, "ADMIN", hash),
             Usuario(2, 1, AuxiliarEmpresa1, "AUXILIAR", hash),
+            Usuario(4, 1, AuditorEmpresa1, "AUDITOR", hash),
             Usuario(3, 2, AdminEmpresa2, "ADMIN", hash));
 
         db.PlanCuentas.AddRange(
@@ -44,6 +53,13 @@ public static class DatosDePrueba
             Cuenta(CajaGeneral, 1, "110505", "Caja General", Caja, 4, "ACTIVO", "DEBITO", movimiento: true),
             Cuenta(Pasivo, 1, "2", "PASIVO", null, 1, "PASIVO", "CREDITO", movimiento: false),
             Cuenta(ActivoEmpresa2, 2, "1", "ACTIVO EMPRESA DOS", null, 1, "ACTIVO", "DEBITO", movimiento: false));
+
+        db.Terceros.AddRange(
+            Tercero(ClienteDemo, 1, "NIT", "900123456", 8, "Cliente Demo S.A.S.", "CLIENTE"),
+            Tercero(ProveedorDemo, 1, "CC", "1234567", null, "Proveedor Persona", "PROVEEDOR"),
+            Tercero(TerceroEmpresa2, 2, "NIT", "900123456", 8, "Cliente de la empresa dos", "CLIENTE"));
+
+        db.CentrosCostos.Add(new CentroCosto { IdCentroCosto = CentroAdministracion, IdEmpresa = 1, Codigo = "CC-100", Nombre = "Administración", Activo = true });
 
         db.SaveChanges();
     }
@@ -57,6 +73,18 @@ public static class DatosDePrueba
         PasswordHash = hash,
         Rol = rol,
         Estado = "ACTIVO",
+    };
+
+    private static Tercero Tercero(int id, int idEmpresa, string tipoDoc, string numero, int? dv, string nombre, string tipos) => new()
+    {
+        IdTercero = id,
+        IdEmpresa = idEmpresa,
+        TipoDocumento = tipoDoc,
+        NumeroDocumento = numero,
+        DigitoVerificacion = dv,
+        NombreRazonSocial = nombre,
+        TipoTercero = tipos,
+        Estado = true,
     };
 
     private static PlanCuenta Cuenta(
