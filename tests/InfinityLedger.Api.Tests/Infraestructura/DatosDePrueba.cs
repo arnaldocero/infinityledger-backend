@@ -6,8 +6,10 @@ namespace InfinityLedger.Api.Tests.Infraestructura;
 /// <summary>
 /// Dos empresas para comprobar que nadie ve datos de otra empresa.
 ///   Empresa 1: admin, auxiliar, auditor, un PUC pequeño (1 → 11 → 1105 → 110505, y 2 PASIVO),
-///              dos terceros y un centro de costo.
-///   Empresa 2: admin, la cuenta 1 y un tercero.
+///              dos terceros, un centro de costo, contador, períodos ago (cerrado), sep y oct 2026,
+///              tipos ING (consecutivo 5, usado hasta 4) y NOT (consecutivo 2, usado el 1),
+///              un asiento publicado en septiembre y uno en borrador en octubre.
+///   Empresa 2: admin, la cuenta 1, un tercero, el período oct 2026 y el tipo ING.
 /// </summary>
 public static class DatosDePrueba
 {
@@ -16,6 +18,7 @@ public static class DatosDePrueba
     public const string AdminEmpresa1 = "admin@empresa1.com";
     public const string AuxiliarEmpresa1 = "auxiliar@empresa1.com";
     public const string AuditorEmpresa1 = "auditor@empresa1.com";
+    public const string ContadorEmpresa1 = "contador@empresa1.com";
     public const string AdminEmpresa2 = "admin@empresa2.com";
 
     // Ids de cuentas sembradas
@@ -32,6 +35,15 @@ public static class DatosDePrueba
     public const int TerceroEmpresa2 = 100;
     public const int CentroAdministracion = 1;
 
+    // Períodos y tipos de comprobante sembrados
+    public const int Agosto2026 = 1;
+    public const int Septiembre2026 = 2;
+    public const int Octubre2026 = 3;
+    public const int Octubre2026Empresa2 = 100;
+    public const int TipoIngreso = 1;
+    public const int TipoNota = 2;
+    public const int TipoIngresoEmpresa2 = 100;
+
     public static void Cargar(CodeLedgerContext db)
     {
         db.Empresas.AddRange(
@@ -44,6 +56,7 @@ public static class DatosDePrueba
             Usuario(1, 1, AdminEmpresa1, "ADMIN", hash),
             Usuario(2, 1, AuxiliarEmpresa1, "AUXILIAR", hash),
             Usuario(4, 1, AuditorEmpresa1, "AUDITOR", hash),
+            Usuario(5, 1, ContadorEmpresa1, "CONTADOR", hash),
             Usuario(3, 2, AdminEmpresa2, "ADMIN", hash));
 
         db.PlanCuentas.AddRange(
@@ -61,8 +74,47 @@ public static class DatosDePrueba
 
         db.CentrosCostos.Add(new CentroCosto { IdCentroCosto = CentroAdministracion, IdEmpresa = 1, Codigo = "CC-100", Nombre = "Administración", Activo = true });
 
+        db.PeriodosFiscales.AddRange(
+            Periodo(Agosto2026, 1, 8, "CERRADO"),
+            Periodo(Septiembre2026, 1, 9, "ABIERTO"),
+            Periodo(Octubre2026, 1, 10, "ABIERTO"),
+            Periodo(Octubre2026Empresa2, 2, 10, "ABIERTO"));
+
+        db.ComprobantesTipos.AddRange(
+            new TipoComprobante { IdTipoComprobante = TipoIngreso, IdEmpresa = 1, Codigo = "ING", Nombre = "Ingreso", ConsecutivoActual = 5 },
+            new TipoComprobante { IdTipoComprobante = TipoNota, IdEmpresa = 1, Codigo = "NOT", Nombre = "Nota contable", ConsecutivoActual = 2 },
+            new TipoComprobante { IdTipoComprobante = TipoIngresoEmpresa2, IdEmpresa = 2, Codigo = "ING", Nombre = "Ingreso", ConsecutivoActual = 1 });
+
+        db.AsientosEncabezados.AddRange(
+            Asiento(1, TipoIngreso, 4, Septiembre2026, new DateOnly(2026, 9, 15), "PUBLICADO"),
+            Asiento(2, TipoNota, 1, Octubre2026, new DateOnly(2026, 10, 5), "BORRADOR"));
+
         db.SaveChanges();
     }
+
+    private static PeriodoFiscal Periodo(int id, int idEmpresa, int mes, string estado) => new()
+    {
+        IdPeriodo = id,
+        IdEmpresa = idEmpresa,
+        Anio = 2026,
+        Mes = mes,
+        FechaInicio = new DateOnly(2026, mes, 1),
+        FechaFin = new DateOnly(2026, mes, DateTime.DaysInMonth(2026, mes)),
+        Estado = estado,
+    };
+
+    private static AsientoEncabezado Asiento(int id, int idTipo, int numero, int idPeriodo, DateOnly fecha, string estado) => new()
+    {
+        IdAsiento = id,
+        IdEmpresa = 1,
+        IdTipoComprobante = idTipo,
+        NumeroComprobante = numero,
+        IdPeriodo = idPeriodo,
+        IdUsuario = 1,
+        FechaAsiento = fecha,
+        ConceptoGeneral = "Asiento de prueba",
+        Estado = estado,
+    };
 
     private static Usuario Usuario(int id, int idEmpresa, string email, string rol, string hash) => new()
     {

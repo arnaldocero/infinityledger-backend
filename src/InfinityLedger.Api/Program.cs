@@ -3,6 +3,8 @@ using System.Threading.RateLimiting;
 using InfinityLedger.Api.Auth;
 using InfinityLedger.Api.Data;
 using InfinityLedger.Api.CentrosCosto;
+using InfinityLedger.Api.Comprobantes;
+using InfinityLedger.Api.Periodos;
 using InfinityLedger.Api.PlanCuentas;
 using InfinityLedger.Api.Terceros;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -43,6 +45,8 @@ builder.Services.AddScoped<IServicioAutenticacion, ServicioAutenticacion>();
 builder.Services.AddScoped<IServicioPlanCuentas, ServicioPlanCuentas>();
 builder.Services.AddScoped<IServicioTerceros, ServicioTerceros>();
 builder.Services.AddScoped<IServicioCentrosCosto, ServicioCentrosCosto>();
+builder.Services.AddScoped<IServicioPeriodos, ServicioPeriodos>();
+builder.Services.AddScoped<IServicioTiposComprobante, ServicioTiposComprobante>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
