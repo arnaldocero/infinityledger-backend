@@ -7,6 +7,7 @@ using InfinityLedger.Api.CentrosCosto;
 using InfinityLedger.Api.Comprobantes;
 using InfinityLedger.Api.Periodos;
 using InfinityLedger.Api.PlanCuentas;
+using InfinityLedger.Api.Reportes;
 using InfinityLedger.Api.Terceros;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,7 @@ builder.Services.AddScoped<IServicioCentrosCosto, ServicioCentrosCosto>();
 builder.Services.AddScoped<IServicioPeriodos, ServicioPeriodos>();
 builder.Services.AddScoped<IServicioTiposComprobante, ServicioTiposComprobante>();
 builder.Services.AddScoped<IServicioAsientos, ServicioAsientos>();
+builder.Services.AddScoped<IServicioReportes, ServicioReportes>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

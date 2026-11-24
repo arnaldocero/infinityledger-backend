@@ -1,6 +1,7 @@
 using InfinityLedger.Api.Comun;
 using InfinityLedger.Api.Data;
 using InfinityLedger.Api.Data.Entities;
+using InfinityLedger.Api.Reportes;
 using Microsoft.EntityFrameworkCore;
 
 namespace InfinityLedger.Api.Periodos;
@@ -126,6 +127,9 @@ public class ServicioPeriodos : IServicioPeriodos
             return Invalido($"El período tiene {borradores} asiento(s) en borrador; publíquelos o anúlelos antes de cerrar.");
         }
 
+        // Foto de los saldos del mes: ya no pueden cambiar mientras el período siga cerrado.
+        await GuardarSaldosMensualesAsync(periodo, cancellationToken);
+
         periodo.Estado = Cerrado;
         Auditar(usuario, "CERRAR", periodo);
         await _db.SaveChangesAsync(cancellationToken);
@@ -157,11 +161,35 @@ public class ServicioPeriodos : IServicioPeriodos
             return Invalido($"Primero reabra el período {Nombre(posteriorCerrado.Anio, posteriorCerrado.Mes)}.");
         }
 
+        // Al reabrir, los asientos del mes pueden cambiar: la foto deja de ser válida.
+        _db.SaldosMensuales.RemoveRange(_db.SaldosMensuales.Where(s => s.IdPeriodo == periodo.IdPeriodo));
+
         periodo.Estado = Abierto;
         Auditar(usuario, "REABRIR", periodo);
         await _db.SaveChangesAsync(cancellationToken);
 
         return Resultado<PeriodoDto>.Ok(ADto(periodo));
+    }
+
+    /// <summary>Guarda en saldos_mensuales el saldo inicial, los movimientos y el saldo final de cada auxiliar con valores.</summary>
+    private async Task GuardarSaldosMensualesAsync(PeriodoFiscal periodo, CancellationToken cancellationToken)
+    {
+        _db.SaldosMensuales.RemoveRange(_db.SaldosMensuales.Where(s => s.IdPeriodo == periodo.IdPeriodo));
+
+        var saldos = await new CalculadoraSaldos(_db).SaldosAsync(periodo.IdEmpresa, periodo.FechaInicio, periodo.FechaFin, cancellationToken);
+
+        _db.SaldosMensuales.AddRange(saldos
+            .Where(s => s.Cuenta.EsMovimiento == true && s.TieneValores)
+            .Select(s => new SaldoMensual
+            {
+                IdEmpresa = periodo.IdEmpresa,
+                IdCuenta = s.Cuenta.IdCuenta,
+                IdPeriodo = periodo.IdPeriodo,
+                SaldoInicial = s.SaldoInicial,
+                TotalDebe = s.Debe,
+                TotalHaber = s.Haber,
+                SaldoFinal = s.SaldoFinal,
+            }));
     }
 
     private Task<PeriodoFiscal?> BuscarAsync(int idEmpresa, int idPeriodo, CancellationToken cancellationToken) =>

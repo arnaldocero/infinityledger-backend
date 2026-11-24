@@ -10,6 +10,9 @@ public static class Roles
 
     public const string AdminOContador = Admin + "," + Contador;
 
+    /// <summary>Quienes consultan los reportes contables (el AUXILIAR registra, pero no ve estados financieros).</summary>
+    public const string ConsultaReportes = Admin + "," + Contador + "," + Auditor;
+
     /// <summary>Todos menos el AUDITOR, que solo consulta.</summary>
     public const string AdminContadorAuxiliar = Admin + "," + Contador + "," + Auxiliar;
 }

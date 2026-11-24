@@ -424,7 +424,8 @@ public class ServicioAsientos : IServicioAsientos
 
     private static Resultado<AsientoDto> NoEncontrado() => Resultado<AsientoDto>.Fallo(TipoError.NoEncontrado, "El asiento no existe.");
 
-    private static AsientoDto ADto(AsientoEncabezado a)
+    /// <summary>Requiere el tipo y las líneas con su cuenta, tercero y centro cargados.</summary>
+    internal static AsientoDto ADto(AsientoEncabezado a)
     {
         var lineas = a.AsientosDetalles
             .OrderBy(d => d.IdAsientoDetalle)
